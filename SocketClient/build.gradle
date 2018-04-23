@@ -31,5 +31,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.0'
 }
 
-//apply from: 'publish.gradle'
-apply from: 'nexus-push.gradle'
+apply from: 'publish.gradle'
+//apply from: 'nexus-push.gradle'
