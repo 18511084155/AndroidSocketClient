@@ -85,11 +85,6 @@ public class MyApplication extends Application {
 * 公网IP:`104.238.184.237`
 * 公网Port:`8080`
 
-<font size=2>您也可以选择下载 JAR 文件到本地,运行在您的本地进行调试
-[Download JAR](https://raw.githubusercontent.com/xuuhaoo/AndroidSocketClient/master/server/out/artifacts/socketserver_jar/socketserver.jar "download jar file")</font>
-
-* <font size=2>您可以使用下面的代码将其运行起来`java -jar SocketServerDemo.jar`</font>
-
 ##### <font id="6.1">简单的长连接</font>
 * <font size=2> AndroidSocketClient 会默认对每一个 Open 的新通道做缓存管理,仅在第一次调用 Open 方法时创建 ConnectionManager 管理器,之后调用者可以通过获取到该ConnectionManager的引用,继续调用相关方法 </font>
 * <font size=2> ConnectionManager 主要负责该地址的套接字连接断开发送消息等操作.</font>
@@ -188,7 +183,7 @@ public void onSocketConnectionSuccess(Context context, ConnectionInfo info, Stri
 ```
 ##### <font id="6.4">如何接收数据</font>
 * AndroidSocketClient客户端接收服务器数据是要求一定格式的,客户端的AndroidSocketClientOptions提供了接口来修改默认的服务器返回的包头解析规则.请看下图为默认的包头包体解析规则
-![img](https://github.com/xuuhaoo/AndroidSocketClient/blob/master/package.png?raw=true)
+![img](https://github.com/18511084155/AndroidSocketClient/blob/master/package.png?raw=true)
 * 如上图包头中的内容为4个字节长度的int型,该int值标识了包体数据区的长度,这就是默认的头解析,如果需要自定义头请按照如下方法.
 
 ```java
