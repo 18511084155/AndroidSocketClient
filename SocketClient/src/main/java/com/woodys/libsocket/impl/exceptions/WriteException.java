@@ -2,7 +2,7 @@ package com.woodys.libsocket.impl.exceptions;
 
 /**
  * 写异常
- * Created by woodys on 2017/4/16.
+ * Created by woodys on 2017/5/16.
  */
 
 public class WriteException extends RuntimeException {

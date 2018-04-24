@@ -1,7 +1,7 @@
 package com.woodys.libsocket.impl.exceptions;
 
 /**
- * Created by woodys on 2017/4/16.
+ * Created by woodys on 2017/5/16.
  */
 
 public class UnconnectException extends RuntimeException {

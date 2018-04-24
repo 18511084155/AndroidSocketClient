@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * 原始数据结构体
- * Created by woodys on 2017/4/16.
+ * Created by woodys on 2017/5/16.
  */
 public final class OriginalData implements Serializable {
     /**

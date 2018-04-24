@@ -4,7 +4,7 @@ import java.nio.ByteOrder;
 
 /**
  * 包头数据格式
- * Created by woodys on 2017/4/22.
+ * Created by woodys on 2017/5/22.
  */
 public interface IHeaderProtocol {
     /**

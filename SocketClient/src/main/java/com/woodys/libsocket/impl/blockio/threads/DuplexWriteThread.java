@@ -6,12 +6,12 @@ import com.woodys.libsocket.impl.LoopThread;
 import com.woodys.libsocket.impl.abilities.IWriter;
 import com.woodys.libsocket.sdk.connection.abilities.IStateSender;
 import com.woodys.libsocket.sdk.connection.interfacies.IAction;
-import com.woodys.libsocket.utils.SLog;
+import com.woodys.libsocket.utils.SL;
 
 import java.io.IOException;
 
 /**
- * Created by woodys on 2017/4/17.
+ * Created by woodys on 2017/5/17.
  */
 
 public class DuplexWriteThread extends LoopThread {
@@ -39,7 +39,7 @@ public class DuplexWriteThread extends LoopThread {
     @Override
     protected void loopFinish(Exception e) {
         if (e != null) {
-            SLog.e("duplex write error,thread is dead with exception:" + e.getMessage());
+            SL.e("duplex write error,thread is dead with exception:" + e.getMessage());
         }
         mStateSender.sendBroadcast(IAction.ACTION_WRITE_THREAD_SHUTDOWN, e);
     }

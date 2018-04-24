@@ -7,12 +7,12 @@ import com.woodys.libsocket.impl.abilities.IReader;
 import com.woodys.libsocket.impl.abilities.IWriter;
 import com.woodys.libsocket.sdk.connection.abilities.IStateSender;
 import com.woodys.libsocket.sdk.connection.interfacies.IAction;
-import com.woodys.libsocket.utils.SLog;
+import com.woodys.libsocket.utils.SL;
 
 import java.io.IOException;
 
 /**
- * Created by woodys on 2017/4/17.
+ * Created by woodys on 2017/5/17.
  */
 
 public class SimplexIOThread extends LoopThread {
@@ -52,7 +52,7 @@ public class SimplexIOThread extends LoopThread {
     @Override
     protected void loopFinish(Exception e) {
         if (e != null) {
-            SLog.e("simplex error,thread is dead with exception:" + e.getMessage());
+            SL.e("simplex error,thread is dead with exception:" + e.getMessage());
         }
         mStateSender.sendBroadcast(IAction.ACTION_WRITE_THREAD_SHUTDOWN, e);
         mStateSender.sendBroadcast(IAction.ACTION_READ_THREAD_SHUTDOWN, e);

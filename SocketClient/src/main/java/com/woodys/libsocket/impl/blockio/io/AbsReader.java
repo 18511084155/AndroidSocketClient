@@ -9,7 +9,7 @@ import com.woodys.libsocket.sdk.connection.abilities.IStateSender;
 import java.io.InputStream;
 
 /**
- * Created by woodys on 2018/3/26.
+ * Created by woodys on 2017/12/26.
  */
 
 public abstract class AbsReader implements IReader {

@@ -1,7 +1,7 @@
 package com.woodys.libsocket.impl.exceptions;
 
 /**
- * Created by woodys on 2017/3/5.
+ * Created by woodys on 2017/6/5.
  */
 
 public class DogDeadException extends RuntimeException {

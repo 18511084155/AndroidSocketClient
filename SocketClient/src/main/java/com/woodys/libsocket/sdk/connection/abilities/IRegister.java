@@ -5,7 +5,7 @@ import android.content.BroadcastReceiver;
 import com.woodys.libsocket.sdk.connection.interfacies.ISocketActionListener;
 
 /**
- * Created by woodys on 2017/4/17.
+ * Created by woodys on 2017/5/17.
  */
 
 public interface IRegister {

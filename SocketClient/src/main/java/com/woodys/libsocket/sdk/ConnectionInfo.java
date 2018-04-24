@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * 连接信息服务类
- * Created by woodys on 2017/4/16.
+ * Created by woodys on 2017/5/16.
  */
 public final class ConnectionInfo implements Serializable, Cloneable {
     /**

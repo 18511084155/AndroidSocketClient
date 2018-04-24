@@ -14,7 +14,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Created by woodys on 2017/3/5.
+ * Created by woodys on 2017/6/5.
  */
 
 public abstract class AbsReconnectionManager implements ISocketActionListener {

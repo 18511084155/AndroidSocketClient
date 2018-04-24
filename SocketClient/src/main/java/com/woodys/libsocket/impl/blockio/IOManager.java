@@ -16,13 +16,13 @@ import com.woodys.libsocket.sdk.OkSocketOptions;
 import com.woodys.libsocket.sdk.protocol.IHeaderProtocol;
 import com.woodys.libsocket.sdk.bean.ISendable;
 import com.woodys.libsocket.sdk.connection.abilities.IStateSender;
-import com.woodys.libsocket.utils.SLog;
+import com.woodys.libsocket.utils.SL;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Created by woodys on 2017/4/31.
+ * Created by woodys on 2017/5/31.
  */
 
 public class IOManager implements IIOManager {
@@ -76,11 +76,11 @@ public class IOManager implements IIOManager {
         mWriter.setOption(mOkOptions);
         switch (mOkOptions.getIOThreadMode()) {
             case DUPLEX:
-                SLog.e("DUPLEX is processing");
+                SL.e("DUPLEX is processing");
                 duplex();
                 break;
             case SIMPLEX:
-                SLog.e("SIMPLEX is processing");
+                SL.e("SIMPLEX is processing");
                 simplex();
                 break;
             default:
@@ -145,10 +145,6 @@ public class IOManager implements IIOManager {
         IHeaderProtocol protocol = mOkOptions.getHeaderProtocol();
         if (protocol == null) {
             throw new IllegalArgumentException("The header protocol can not be Null.");
-        }
-
-        if (protocol.getHeaderLength() == 0) {
-            throw new IllegalArgumentException("The header length can not be zero.");
         }
     }
 

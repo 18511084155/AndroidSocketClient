@@ -1,7 +1,7 @@
 package com.woodys.libsocket.impl.exceptions;
 
 /**
- * Created by woodys on 2017/4/22.
+ * Created by woodys on 2017/5/22.
  */
 
 public class PurifyException extends RuntimeException {

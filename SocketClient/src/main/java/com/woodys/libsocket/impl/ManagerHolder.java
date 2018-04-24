@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by woodys on 2017/4/16.
+ * Created by woodys on 2017/5/16.
  */
 
 public class ManagerHolder {
@@ -31,6 +31,15 @@ public class ManagerHolder {
 
     private ManagerHolder() {
         mConnectionManagerMap.clear();
+    }
+
+    public IConnectionManager get(ConnectionInfo info, Context context) {
+        IConnectionManager manager = mConnectionManagerMap.get(info);
+        if (manager == null) {
+            return get(info, context, OkSocketOptions.getDefault());
+        } else {
+            return get(info, context, manager.getOption());
+        }
     }
 
     public IConnectionManager get(ConnectionInfo info, Context context, OkSocketOptions okOptions) {

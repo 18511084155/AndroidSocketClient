@@ -7,14 +7,17 @@ import com.woodys.libsocket.sdk.connection.abilities.IStateSender;
 import com.woodys.libsocket.sdk.connection.interfacies.IAction;
 import com.woodys.libsocket.sdk.protocol.IHeaderProtocol;
 import com.woodys.libsocket.utils.BytesUtils;
-import com.woodys.libsocket.utils.SLog;
+import com.woodys.libsocket.utils.SL;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 
 /**
- * Created by woodys on 2017/4/31.
+ * Created by woodys on 2017/5/31.
+ * TODO: 这个类需要改动，需要针对不同公司业务场景制定不同的业务环境
  */
 
 public class ReaderImpl extends AbsReader {
@@ -29,84 +32,116 @@ public class ReaderImpl extends AbsReader {
     public void read() throws RuntimeException {
         OriginalData originalData = new OriginalData();
         IHeaderProtocol headerProtocol = mOkOptions.getHeaderProtocol();
-        ByteBuffer headBuf = ByteBuffer.allocate(headerProtocol.getHeaderLength());
-        headBuf.order(mOkOptions.getReadByteOrder());
+        int headerLength= headerProtocol.getHeaderLength();
         try {
-            if (mRemainingBuf != null) {
-                mRemainingBuf.flip();
-                int length = Math.min(mRemainingBuf.remaining(), headerProtocol.getHeaderLength());
-                headBuf.put(mRemainingBuf.array(), 0, length);
-                if (length < headerProtocol.getHeaderLength()) {
-                    //there are no data left
-                    mRemainingBuf = null;
-                    for (int i = 0; i < headerProtocol.getHeaderLength() - length; i++) {
-                        headBuf.put((byte) mInputStream.read());
+            if(headerLength>0) {
+                ByteBuffer headBuf = ByteBuffer.allocate(headerLength);
+                headBuf.order(mOkOptions.getReadByteOrder());
+                if (mRemainingBuf != null) {
+                    mRemainingBuf.flip();
+                    int length = Math.min(mRemainingBuf.remaining(), headerLength);
+                    headBuf.put(mRemainingBuf.array(), 0, length);
+                    if (length < headerLength) {
+                        //there are no data left
+                        mRemainingBuf = null;
+                        for (int i = 0; i < headerLength - length; i++) {
+                            headBuf.put((byte) mInputStream.read());
+                        }
+                    } else {
+                        mRemainingBuf.position(headerLength);
                     }
                 } else {
-                    mRemainingBuf.position(headerProtocol.getHeaderLength());
+                    for (int i = 0; i < headBuf.capacity(); i++) {
+                        headBuf.put((byte) mInputStream.read());
+                    }
                 }
-            } else {
-                for (int i = 0; i < headBuf.capacity(); i++) {
-                    headBuf.put((byte) mInputStream.read());
+                originalData.setHeadBytes(headBuf.array());
+                if (OkSocketOptions.isDebug()) {
+                    SL.i("read head: " + BytesUtils.toHexStringForLog(headBuf.array()));
                 }
-            }
-            originalData.setHeadBytes(headBuf.array());
-            if (OkSocketOptions.isDebug()) {
-                SLog.i("read head: " + BytesUtils.toHexStringForLog(headBuf.array()));
-            }
-            int bodyLength = headerProtocol.getBodyLength(originalData.getHeadBytes(), mOkOptions.getReadByteOrder());
-            if (OkSocketOptions.isDebug()) {
-                SLog.i("need read body length: " + bodyLength);
-            }
-            if (bodyLength > 0) {
-                if (bodyLength > mOkOptions.getMaxReadDataMB() * 1024 * 1024) {
-                    throw new ReadException("we can't read data bigger than " + mOkOptions.getMaxReadDataMB() + "Mb");
+                int bodyLength = headerProtocol.getBodyLength(originalData.getHeadBytes(), mOkOptions.getReadByteOrder());
+
+                if (OkSocketOptions.isDebug()) {
+                    SL.i("need read body length: " + bodyLength);
                 }
-                ByteBuffer byteBuffer = ByteBuffer.allocate(bodyLength);
-                byteBuffer.order(mOkOptions.getReadByteOrder());
-                if (mRemainingBuf != null) {
-                    int bodyStartPosition = mRemainingBuf.position();
-                    int length = Math.min(mRemainingBuf.remaining(), bodyLength);
-                    byteBuffer.put(mRemainingBuf.array(), bodyStartPosition, length);
-                    mRemainingBuf.position(bodyStartPosition + length);
-                    if (length == bodyLength) {
-                        if (mRemainingBuf.remaining() > 0) {//there are data left
+                if (bodyLength > 0) {
+                    if (bodyLength > mOkOptions.getMaxReadDataMB() * 1024 * 1024) {
+                        throw new ReadException("Need to follow the transmission protocol.\r\n" +
+                                "Please check the client/server code.\r\n" +
+                                "According to the packet header data in the transport protocol, the package length is " + bodyLength + " Bytes.");
+                    }
+                    ByteBuffer byteBuffer = ByteBuffer.allocate(bodyLength);
+                    byteBuffer.order(mOkOptions.getReadByteOrder());
+                    if (mRemainingBuf != null) {
+                        int bodyStartPosition = mRemainingBuf.position();
+                        int length = Math.min(mRemainingBuf.remaining(), bodyLength);
+                        byteBuffer.put(mRemainingBuf.array(), bodyStartPosition, length);
+                        mRemainingBuf.position(bodyStartPosition + length);
+                        if (length == bodyLength) {
+                            if (mRemainingBuf.remaining() > 0) {//there are data left
+                                ByteBuffer temp = ByteBuffer.allocate(mRemainingBuf.remaining());
+                                temp.order(mOkOptions.getReadByteOrder());
+                                temp.put(mRemainingBuf.array(), mRemainingBuf.position(), mRemainingBuf.remaining());
+                                mRemainingBuf = temp;
+                            } else {//there are no data left
+                                mRemainingBuf = null;
+                            }
+                            //cause this time data from remaining buffer not from channel.
+                            originalData.setBodyBytes(byteBuffer.array());
+                            mStateSender.sendBroadcast(IAction.ACTION_READ_COMPLETE, originalData);
+                            return;
+                        } else {//there are no data left in buffer and some data pieces in channel
+                            mRemainingBuf = null;
+                        }
+                    }
+                    readBodyFromChannel(byteBuffer);
+                    originalData.setBodyBytes(byteBuffer.array());
+                } else if (bodyLength == 0) {
+                    originalData.setBodyBytes(new byte[0]);
+                    if (mRemainingBuf != null) {
+                        //the body is empty so header remaining buf need set null
+                        if (mRemainingBuf.hasRemaining()) {
                             ByteBuffer temp = ByteBuffer.allocate(mRemainingBuf.remaining());
                             temp.order(mOkOptions.getReadByteOrder());
                             temp.put(mRemainingBuf.array(), mRemainingBuf.position(), mRemainingBuf.remaining());
                             mRemainingBuf = temp;
-                        } else {//there are no data left
+                        } else {
                             mRemainingBuf = null;
                         }
-                        //cause this time data from remaining buffer not from channel.
-                        originalData.setBodyBytes(byteBuffer.array());
-                        mStateSender.sendBroadcast(IAction.ACTION_READ_COMPLETE, originalData);
-                        return;
-                    } else {//there are no data left in buffer and some data pieces in channel
-                        mRemainingBuf = null;
                     }
+                } else if (bodyLength < 0) {
+                    throw new ReadException(
+                            "this socket input stream is end of file read " + bodyLength + " ,we'll disconnect");
                 }
-                readBodyFromChannel(byteBuffer);
-                originalData.setBodyBytes(byteBuffer.array());
-            } else if (bodyLength == 0) {
-                originalData.setBodyBytes(new byte[0]);
-                if (mRemainingBuf != null) {
-                    //the body is empty so header remaining buf need set null
-                    if (mRemainingBuf.hasRemaining()) {
-                        ByteBuffer temp = ByteBuffer.allocate(mRemainingBuf.remaining());
-                        temp.order(mOkOptions.getReadByteOrder());
-                        temp.put(mRemainingBuf.array(), mRemainingBuf.position(), mRemainingBuf.remaining());
-                        mRemainingBuf = temp;
-                    } else {
-                        mRemainingBuf = null;
+                mStateSender.sendBroadcast(IAction.ACTION_READ_COMPLETE, originalData);
+            } else {
+                originalData.setHeadBytes(null);
+                if (OkSocketOptions.isDebug()) {
+                    SL.i("read head: " + null);
+                }
+                /*
+                byte[] bufArray = new byte[mOkOptions.getReadPackageBytes()];
+                int source = 0;
+                int index = 0;
+                //这个会被阻塞
+                while((source = mInputStream.read()) != -1){
+                    //开始：数组自动扩容
+                    if(index==bufArray.length){
+                        byte[] temp = new byte[index+1];
+                        System.arraycopy(bufArray, 0, temp, 0, bufArray.length);
+                        bufArray = temp;
+                        temp = null;
                     }
+                    bufArray[index] = (byte)source;
+                    index++;
                 }
-            } else if (bodyLength < 0) {
-                throw new ReadException(
-                        "this socket input stream has some problem,wrong body length " + bodyLength
-                                + ",we'll disconnect");
+                originalData.setBodyBytes(bufArray);
+                */
+                BufferedReader reader = new BufferedReader(new InputStreamReader(mInputStream));
+                originalData.setBodyBytes(reader.readLine().getBytes());
+                mStateSender.sendBroadcast(IAction.ACTION_READ_COMPLETE, originalData);
             }
-            mStateSender.sendBroadcast(IAction.ACTION_READ_COMPLETE, originalData);
+
         } catch (Exception e) {
             ReadException readException = new ReadException(e);
             throw readException;
@@ -116,7 +151,7 @@ public class ReaderImpl extends AbsReader {
     private void readBodyFromChannel(ByteBuffer byteBuffer) throws IOException {
         while (byteBuffer.hasRemaining()) {
             try {
-                byte[] bufArray = new byte[mOkOptions.getReadSingleTimeBufferBytes()];
+                byte[] bufArray = new byte[mOkOptions.getReadPackageBytes()];
                 int len = mInputStream.read(bufArray);
                 if (len < 0) {
                     break;
@@ -135,8 +170,8 @@ public class ReaderImpl extends AbsReader {
             }
         }
         if (OkSocketOptions.isDebug()) {
-            SLog.i("read total bytes: " + BytesUtils.toHexStringForLog(byteBuffer.array()));
-            SLog.i("read total length:" + (byteBuffer.capacity() - byteBuffer.remaining()));
+            SL.i("read total bytes: " + BytesUtils.toHexStringForLog(byteBuffer.array()));
+            SL.i("read total length:" + (byteBuffer.capacity() - byteBuffer.remaining()));
         }
     }
 

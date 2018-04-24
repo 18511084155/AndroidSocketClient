@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * 可发送类,继承该类,并实现parse方法即可获得发送能力
- * Created by woodys on 2017/4/16.
+ * Created by woodys on 2017/5/16.
  */
 public interface ISendable extends Serializable {
     /**

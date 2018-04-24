@@ -6,7 +6,7 @@ import java.security.cert.X509Certificate;
 import javax.net.ssl.X509TrustManager;
 
 /**
- * Created by woodys on 2018/3/28.
+ * Created by woodys on 2017/12/28.
  */
 
 public class DefaultX509ProtocolTrustManager implements X509TrustManager {

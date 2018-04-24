@@ -8,11 +8,15 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.woodys.android.oksocket.data.MessageBean;
+import com.woodys.android.oksocket.util.JsonUtils;
+import com.woodys.android.oksocket.utils.AESEncoder;
 import com.woodys.libsocket.sdk.ConnectionInfo;
 import com.woodys.libsocket.sdk.OkSocket;
 import com.woodys.libsocket.sdk.OkSocketOptions;
@@ -28,8 +32,22 @@ import com.woodys.android.oksocket.data.LogBean;
 import com.woodys.android.oksocket.data.NearCarRegisterRq;
 import com.woodys.android.oksocket.data.PulseBean;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URLEncoder;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.zip.GZIPOutputStream;
+
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
+import sun.misc.BASE64Encoder;
 
 import static android.widget.Toast.LENGTH_SHORT;
 import static com.woodys.libsocket.sdk.OkSocket.open;
@@ -106,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
                 ConnectionInfo redirectInfo = new ConnectionInfo(ip, port);
                 redirectInfo.setBackupInfo(mInfo.getBackupInfo());
                 mManager.getReconnectionManager().addIgnoreException(RedirectException.class);
-                mManager.disConnect(new RedirectException(redirectInfo));
+                mManager.disconnect(new RedirectException(redirectInfo));
             } else if (cmd == 14) {//心跳
                 mManager.getPulseManager().feed();
             }
@@ -162,23 +180,7 @@ public class MainActivity extends AppCompatActivity {
 //        mInfo = new ConnectionInfo("111.206.162.233", 8088);
         mInfo = new ConnectionInfo("104.238.184.237", 8080);
         mOkOptions = OkSocketOptions.getDefault();
-        //设置自定义解析头
-        OkSocketOptions.Builder okOptionsBuilder = new OkSocketOptions.Builder(mOkOptions);
-        okOptionsBuilder.setHeaderProtocol(new IHeaderProtocol() {
-            @Override
-            public int getHeaderLength() {
-                //返回自定义的包头长度,框架会解析该长度的包头
-                return 0;
-            }
-
-            @Override
-            public int getBodyLength(byte[] header, ByteOrder byteOrder) {
-                //从header(包头数据)中解析出包体的长度,byteOrder是你在参配中配置的字节序,可以使用ByteBuffer比较方便解析
-                return 0;
-            }
-        });
-        //将新的修改后的参配设置给连接管理器
-        mManager = OkSocket.open(mInfo, okOptionsBuilder.build());
+        mManager = OkSocket.open(mInfo, mOkOptions);
 
     }
 
@@ -194,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
                     mManager.connect();
                 } else {
                     mConnect.setText("DisConnecting");
-                    mManager.disConnect();
+                    mManager.disconnect();
                 }
             }
         });
@@ -293,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (mManager != null) {
-            mManager.disConnect();
+            mManager.disconnect();
         }
     }
 

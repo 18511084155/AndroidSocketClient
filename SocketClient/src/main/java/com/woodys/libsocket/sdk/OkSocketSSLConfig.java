@@ -6,7 +6,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
 /**
- * Created by woodys on 2018/3/27.
+ * Created by woodys on 2017/12/27.
  */
 
 public class OkSocketSSLConfig {

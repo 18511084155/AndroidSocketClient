@@ -5,10 +5,10 @@ import android.util.Log;
 import com.woodys.libsocket.sdk.OkSocketOptions;
 
 /**
- * Created by woodys on 2017/3/9.
+ * Created by woodys on 2017/6/9.
  */
 
-public class SLog {
+public class SL {
 
     public static void e(String msg) {
         if (OkSocketOptions.isDebug()) {

@@ -6,11 +6,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.woodys.android.oksocket.data.MessageBean;
+import com.woodys.android.oksocket.util.JsonUtils;
+import com.woodys.android.oksocket.utils.AESEncoder;
 import com.woodys.libsocket.sdk.ConnectionInfo;
 import com.woodys.libsocket.sdk.OkSocket;
 import com.woodys.libsocket.sdk.OkSocketOptions;
@@ -23,8 +27,21 @@ import com.woodys.android.oksocket.adapter.LogAdapter;
 import com.woodys.android.oksocket.data.HandShake;
 import com.woodys.android.oksocket.data.LogBean;
 import com.woodys.android.oksocket.data.MsgDataBean;
+import com.woodys.libsocket.sdk.protocol.IHeaderProtocol;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteOrder;
 import java.nio.charset.Charset;
+import java.util.zip.GZIPOutputStream;
+
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
+import sun.misc.BASE64Encoder;
 
 import static android.widget.Toast.LENGTH_SHORT;
 
@@ -52,7 +69,7 @@ public class MainSimpleActivity extends AppCompatActivity {
 
         @Override
         public void onSocketConnectionSuccess(Context context, ConnectionInfo info, String action) {
-            mManager.send(new HandShake());
+            //mManager.send(new HandShake());
             mConnect.setText("DisConnect");
         }
 
@@ -128,13 +145,28 @@ public class MainSimpleActivity extends AppCompatActivity {
         mReceList.setLayoutManager(manager2);
         mReceList.setAdapter(mReceLogAdapter);
 
-        mInfo = new ConnectionInfo("104.238.184.237", 8080);
+        mInfo = new ConnectionInfo("192.168.28.109", 59227);
         mOkOptions = new OkSocketOptions.Builder(OkSocketOptions.getDefault())
                 .setReconnectionManager(new NoneReconnect())
                 .build();
 
+        //设置自定义解析头
+        OkSocketOptions.Builder okOptionsBuilder = new OkSocketOptions.Builder(mOkOptions);
+        okOptionsBuilder.setHeaderProtocol(new IHeaderProtocol() {
+            @Override
+            public int getHeaderLength() {
+                //返回自定义的包头长度,框架会解析该长度的包头
+                return 0;
+            }
 
-        mManager = OkSocket.open(mInfo, mOkOptions);
+            @Override
+            public int getBodyLength(byte[] header, ByteOrder byteOrder) {
+                //从header(包头数据)中解析出包体的长度,byteOrder是你在参配中配置的字节序,可以使用ByteBuffer比较方便解析
+                return 0;
+            }
+        });
+        //将新的修改后的参配设置给连接管理器
+        mManager = OkSocket.open(mInfo, okOptionsBuilder.build());
     }
 
     private void setListener() {
@@ -149,7 +181,7 @@ public class MainSimpleActivity extends AppCompatActivity {
                     mManager.connect();
                 } else {
                     mConnect.setText("DisConnecting");
-                    mManager.disConnect();
+                    mManager.disconnect();
                 }
             }
         });
@@ -166,8 +198,9 @@ public class MainSimpleActivity extends AppCompatActivity {
                     if (TextUtils.isEmpty(msg.trim())) {
                         return;
                     }
-                    MsgDataBean msgDataBean = new MsgDataBean(msg);
-                    mManager.send(msgDataBean);
+                    sendMessage(getMessage(msg));
+                    /*MsgDataBean msgDataBean = new MsgDataBean(msg);
+                    mManager.send(msgDataBean);*/
                     mSendET.setText("");
                 }
             }
@@ -181,6 +214,57 @@ public class MainSimpleActivity extends AppCompatActivity {
                 mSendLogAdapter.notifyDataSetChanged();
             }
         });
+    }
+
+    private String getMessage(String msg){
+        MessageBean messageBean=new MessageBean();
+        /** 下面四个字段必须传递 **/
+        messageBean.userId="18511084155";
+        messageBean.event="DATA";
+        messageBean.userSource="TAOBAO";
+        messageBean.appId="0008";
+        /** 下面两个字段可传递 **/
+        messageBean.data= msg;
+        messageBean.registerFrom="217";
+        return JsonUtils.toJson(messageBean);
+    }
+
+    //发送消息
+    private void sendMessage(final String content){
+        Observable.create(new Observable.OnSubscribe<String>() {
+            @Override
+            public void call(Subscriber<? super String> subscriber) {
+                try {
+                    byte[] data = AESEncoder.encrypt(content);
+                    ByteArrayOutputStream arr = new ByteArrayOutputStream();
+                    OutputStream zipper = new GZIPOutputStream(arr);
+                    zipper.write(data);
+                    zipper.flush();
+                    zipper.close();
+                    String encoder = Base64.encodeToString(arr.toByteArray(), Base64.NO_WRAP);
+                    subscriber.onNext(encoder+"\r\n");
+                    subscriber.onCompleted();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).observeOn(AndroidSchedulers.mainThread()).
+                subscribeOn(Schedulers.io()).
+                subscribe(new Action1<String>() {
+                              @Override
+                              public void call(String msg) {
+                                  MsgDataBean msgDataBean = new MsgDataBean(msg);
+                                  mManager.send(msgDataBean);
+                              }
+                          }, new Action1<Throwable>() {
+                              @Override
+                              public void call(Throwable e) {
+                                  e.printStackTrace();
+                              }
+                          }
+                );
     }
 
     private void logSend(String log) {
@@ -199,7 +283,8 @@ public class MainSimpleActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (mManager != null) {
-            mManager.disConnect();
+            mManager.disconnect();
+            mManager.unRegisterReceiver(adapter);
         }
     }
 }

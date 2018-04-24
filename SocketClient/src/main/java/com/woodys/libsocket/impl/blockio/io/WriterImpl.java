@@ -8,7 +8,7 @@ import com.woodys.libsocket.sdk.bean.ISendable;
 import com.woodys.libsocket.sdk.connection.abilities.IStateSender;
 import com.woodys.libsocket.sdk.connection.interfacies.IAction;
 import com.woodys.libsocket.utils.BytesUtils;
-import com.woodys.libsocket.utils.SLog;
+import com.woodys.libsocket.utils.SL;
 
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Created by woodys on 2017/4/31.
+ * Created by woodys on 2017/5/31.
  */
 
 public class WriterImpl implements IWriter {
@@ -46,7 +46,7 @@ public class WriterImpl implements IWriter {
         if (sendable != null) {
             try {
                 byte[] sendBytes = sendable.parse();
-                int packageSize = mOkOptions.getSendSinglePackageBytes();
+                int packageSize = mOkOptions.getWritePackageBytes();
                 int remainingCount = sendBytes.length;
                 ByteBuffer writeBuf = ByteBuffer.allocate(packageSize);
                 writeBuf.order(mOkOptions.getWriteOrder());
@@ -62,10 +62,10 @@ public class WriterImpl implements IWriter {
                     mOutputStream.write(writeArr);
                     mOutputStream.flush();
 
-                    byte[] forLogBytes = Arrays.copyOfRange(sendBytes, index, index + realWriteLength);
                     if (OkSocketOptions.isDebug()) {
-                        SLog.i("write bytes: " + BytesUtils.toHexStringForLog(forLogBytes));
-                        SLog.i("bytes write length:" + realWriteLength);
+                        byte[] forLogBytes = Arrays.copyOfRange(sendBytes, index, index + realWriteLength);
+                        SL.i("write bytes: " + BytesUtils.toHexStringForLog(forLogBytes));
+                        SL.i("bytes write length:" + realWriteLength);
                     }
 
                     index += realWriteLength;

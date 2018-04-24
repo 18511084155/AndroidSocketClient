@@ -2,10 +2,10 @@ package com.woodys.libsocket.impl;
 
 import android.content.Context;
 
-import com.woodys.libsocket.utils.SLog;
+import com.woodys.libsocket.utils.SL;
 
 /**
- * Created by woodys on 2016/6/18.
+ * Created by woodys on 15/6/18.
  */
 public abstract class LoopThread implements Runnable {
     public Thread thread = null;
@@ -38,7 +38,7 @@ public abstract class LoopThread implements Runnable {
             isStop = false;
             loopTimes = 0;
             thread.start();
-            SLog.i(threadName + " is starting");
+            SL.i(threadName + " is starting");
         }
     }
 
@@ -56,7 +56,7 @@ public abstract class LoopThread implements Runnable {
         } finally {
             this.loopFinish(ioException);
             ioException = null;
-            SLog.i(threadName + " is shutting down");
+            SL.i(threadName + " is shutting down");
         }
     }
 

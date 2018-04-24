@@ -9,7 +9,7 @@ import com.woodys.libsocket.sdk.connection.abilities.IRegister;
 import com.woodys.libsocket.sdk.connection.abilities.ISender;
 
 /**
- * Created by woodys on 2017/4/16.
+ * Created by woodys on 2017/5/16.
  */
 
 public interface IConnectionManager extends
@@ -20,6 +20,8 @@ public interface IConnectionManager extends
         IRegister {
 
     boolean isConnect();
+
+    boolean isDisconnecting();
 
     PulseManager getPulseManager();
 

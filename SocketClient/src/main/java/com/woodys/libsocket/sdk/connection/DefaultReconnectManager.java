@@ -7,19 +7,19 @@ import android.os.Message;
 
 import com.woodys.libsocket.impl.exceptions.PurifyException;
 import com.woodys.libsocket.sdk.ConnectionInfo;
-import com.woodys.libsocket.utils.SLog;
+import com.woodys.libsocket.utils.SL;
 
 import java.util.Iterator;
 
 /**
- * Created by woodys on 2017/3/5.
+ * Created by woodys on 2017/6/5.
  */
 
 public class DefaultReconnectManager extends AbsReconnectionManager {
     /**
      * 默认重连时间(后面会以指数次增加)
      */
-    private static final int DEFAULT = 5 * 1000;
+    private static final long DEFAULT = 5 * 1000;
     /**
      * 最大连接失败次数,不包括断开异常
      */
@@ -27,7 +27,7 @@ public class DefaultReconnectManager extends AbsReconnectionManager {
     /**
      * 延时连接时间
      */
-    private int mReconnectTimeDelay = DEFAULT;
+    private long mReconnectTimeDelay = DEFAULT;
     /**
      * 连接失败次数,不包括断开异常
      */
@@ -44,7 +44,7 @@ public class DefaultReconnectManager extends AbsReconnectionManager {
                 return;
             }
             ConnectionInfo info = mConnectionManager.getConnectionInfo();
-            SLog.i("重新连接 Addrs:" + info.getIp() + ":" + info.getPort());
+            SL.i("重新连接 Addrs:" + info.getIp() + ":" + info.getPort());
             if (!mConnectionManager.isConnect()) {
                 mConnectionManager.connect();
             }
@@ -79,9 +79,11 @@ public class DefaultReconnectManager extends AbsReconnectionManager {
                     backupInfo.setBackupInfo(bbInfo);
                     if (!mConnectionManager.isConnect()) {
                         mConnectionManager.switchConnectionInfo(backupInfo);
-                        SLog.i("尝试重新连接至备用线路 " + "Addrs:" + backupInfo.getIp() + ":" + backupInfo.getPort());
+                        SL.i("尝试重新连接至备用线路 " + "Addrs:" + backupInfo.getIp() + ":" + backupInfo.getPort());
                         mConnectionManager.connect();
                     }
+                }else{
+                    reconnectDelay();
                 }
             } else {
                 reconnectDelay();
@@ -120,7 +122,7 @@ public class DefaultReconnectManager extends AbsReconnectionManager {
     private void reconnectDelay() {
         mHandler.removeCallbacksAndMessages(null);
         mHandler.sendEmptyMessageDelayed(0, mReconnectTimeDelay);
-        SLog.i(mReconnectTimeDelay + " 毫秒后开始尝试重新连接...");
+        SL.i(mReconnectTimeDelay + " 毫秒后开始尝试重新连接...");
         mReconnectTimeDelay = mReconnectTimeDelay * 2;//5+10+20+40 = 75 4次
         if (mReconnectTimeDelay >= DEFAULT * 10) {//DEFAULT * 10 = 50
             mReconnectTimeDelay = DEFAULT;

@@ -9,7 +9,7 @@ import com.woodys.libsocket.sdk.connection.interfacies.ISocketActionListener;
 
 /**
  * Socket行为适配器,是行为监听器的一个Simple版本,详情请见{@link ISocketActionListener}
- * Created by woodys on 2017/4/17.
+ * Created by woodys on 2017/5/17.
  */
 
 public abstract class SocketActionAdapter implements ISocketActionListener {

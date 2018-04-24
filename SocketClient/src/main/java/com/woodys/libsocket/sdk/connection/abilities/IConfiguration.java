@@ -4,7 +4,7 @@ import com.woodys.libsocket.sdk.OkSocketOptions;
 import com.woodys.libsocket.sdk.connection.IConnectionManager;
 
 /**
- * Created by woodys on 2017/4/16.
+ * Created by woodys on 2017/5/16.
  */
 
 public interface IConfiguration {

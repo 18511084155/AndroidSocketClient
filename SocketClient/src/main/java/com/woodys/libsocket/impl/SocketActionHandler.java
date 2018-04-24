@@ -9,7 +9,7 @@ import com.woodys.libsocket.sdk.connection.IConnectionManager;
 import com.woodys.libsocket.sdk.connection.abilities.IRegister;
 
 /**
- * Created by woodys on 2017/4/18.
+ * Created by woodys on 2017/5/18.
  */
 
 public class SocketActionHandler extends SocketActionAdapter {
@@ -47,13 +47,13 @@ public class SocketActionHandler extends SocketActionAdapter {
         } else {//多工模式
             if (!iOThreadIsCalledDisconnect) {//保证只调用一次,多工多线程,会调用两次
                 iOThreadIsCalledDisconnect = true;
-                mManager.disConnect(e);
+                mManager.disconnect(e);
             }
         }
     }
 
     @Override
     public void onSocketConnectionFailed(Context context, ConnectionInfo info, String action, Exception e) {
-        mManager.disConnect(e);
+        mManager.disconnect(e);
     }
 }
