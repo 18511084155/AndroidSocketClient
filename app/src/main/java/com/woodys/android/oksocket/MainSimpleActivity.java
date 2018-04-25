@@ -15,6 +15,8 @@ import android.widget.Toast;
 import com.woodys.android.oksocket.data.MessageBean;
 import com.woodys.android.oksocket.util.JsonUtils;
 import com.woodys.android.oksocket.utils.AESEncoder;
+import com.woodys.devicelib.KeplerSdk;
+import com.woodys.devicelib.callback.DeviceInfoListener;
 import com.woodys.libsocket.sdk.ConnectionInfo;
 import com.woodys.libsocket.sdk.OkSocket;
 import com.woodys.libsocket.sdk.OkSocketOptions;
@@ -28,6 +30,9 @@ import com.woodys.android.oksocket.data.HandShake;
 import com.woodys.android.oksocket.data.LogBean;
 import com.woodys.android.oksocket.data.MsgDataBean;
 import com.woodys.libsocket.sdk.protocol.IHeaderProtocol;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -221,10 +226,18 @@ public class MainSimpleActivity extends AppCompatActivity {
         /** 下面四个字段必须传递 **/
         messageBean.userId="18511084155";
         messageBean.event="DATA";
-        messageBean.userSource="TAOBAO";
+        messageBean.userSource="FINGERPRINT";
         messageBean.appId="0008";
         /** 下面两个字段可传递 **/
-        messageBean.data= msg;
+        JSONObject deviceInfo = KeplerSdk.getInstance().getDeviceInfo(this);
+        try {
+            deviceInfo.put("appChannel","ceshi");
+            deviceInfo.put("registerFrom","217");
+            deviceInfo.put("uuid",msg);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        messageBean.data= deviceInfo.toString();
         messageBean.registerFrom="217";
         return JsonUtils.toJson(messageBean);
     }
