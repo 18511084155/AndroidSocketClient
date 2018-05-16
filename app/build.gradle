@@ -39,5 +39,5 @@ dependencies {
     compile 'io.reactivex:rxjava:1.1.6'
     compile 'io.reactivex:rxandroid:1.1.0'
 
-    compile 'com.woodys.devicelib:devicesdk:1.1.0'
+    compile 'com.woodys.devicelib:devicesdk:1.1.1'
 }

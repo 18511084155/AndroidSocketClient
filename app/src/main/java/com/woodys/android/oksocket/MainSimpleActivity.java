@@ -37,6 +37,8 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.util.zip.GZIPOutputStream;
@@ -150,7 +152,10 @@ public class MainSimpleActivity extends AppCompatActivity {
         mReceList.setLayoutManager(manager2);
         mReceList.setAdapter(mReceLogAdapter);
 
-        mInfo = new ConnectionInfo("192.168.28.109", 59227);
+        //mInfo = new ConnectionInfo("192.168.28.109", 59227);
+        mInfo = new ConnectionInfo("spidersocket.quantgroup.cn", 9000);
+
+        //InetSocketAddress("spidersocket.quantgroup.cn",9000);
         mOkOptions = new OkSocketOptions.Builder(OkSocketOptions.getDefault())
                 .setReconnectionManager(new NoneReconnect())
                 .build();
@@ -298,6 +303,18 @@ public class MainSimpleActivity extends AppCompatActivity {
         if (mManager != null) {
             mManager.disconnect();
             mManager.unRegisterReceiver(adapter);
+        }
+    }
+
+
+    public void InetSocketAddress(String hostname, int port) {
+        InetAddress addr = null;
+        String host = null;
+        try {
+            addr = InetAddress.getByName(hostname);
+            InetAddress[] inetAddresses = InetAddress.getAllByName(host);
+        } catch(UnknownHostException e) {
+            host = hostname;
         }
     }
 }
