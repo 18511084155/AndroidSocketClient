@@ -153,7 +153,7 @@ public class MainSimpleActivity extends AppCompatActivity {
         mReceList.setAdapter(mReceLogAdapter);
 
         //mInfo = new ConnectionInfo("192.168.28.109", 59227);
-        mInfo = new ConnectionInfo("spidersocket.quantgroup.cn", 9000);
+        mInfo = new ConnectionInfo("172.30.220.7", 59227);
 
         //InetSocketAddress("spidersocket.quantgroup.cn",9000);
         mOkOptions = new OkSocketOptions.Builder(OkSocketOptions.getDefault())
